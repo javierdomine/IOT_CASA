@@ -14,6 +14,10 @@ DallasTemperature sensors(&oneWire);
 
 // Update these with values suitable for your network.
 
+
+// Defenir Sensor de Humedad
+#define HW080_VCC 0  //D3
+
 const char* ssid = "FRANKFURT";       //Credenciales de Red
 const char* password = "natalia-natalia";
 const char* mqtt_server = "192.168.68.108"; 
@@ -52,6 +56,10 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  pinMode (HW080_VCC, OUTPUT);
+
+
 }
 void callback(char* topic, byte* payload, unsigned int length) {
 // Variable en las que ser guarda Tema MQTT recibido 
@@ -123,14 +131,18 @@ void reconnect() {
         Serial.println("Error: Could not read temperature data");
       }
 
-
-
-
-
-
-
-
-
+      digitalWrite (HW080_VCC, LOW);
+      delay (500);
+      int lectura = analogRead(A0);
+      int humedad = (1024-lectura)*100/1024;
+      Serial.print ("El porcentaje de humedad es: ");
+      Serial.println (humedad);
+      mensaje =  String(humedad);
+      mensaje.toCharArray(msg, MSG_BUFFER_SIZE);      
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+      client.publish("CASA/JARDIN/HUMEDAD", msg);
+      digitalWrite (HW080_VCC, HIGH);
 //      client.subscribe("CASA/HORA/MINUTOS");
       client.subscribe("CASA/HORA/#");
     } else {
@@ -168,9 +180,8 @@ void loop() {
     Serial.print ("MINUTOS: ");
     Serial.println( minutos);
     flag = 0;
-//    if (minutos == "0" || minutos == "10" || minutos =="20" || minutos == "30" || minutos == "40" || minutos == "50"){
-    if (1){
-      Serial.println ("alcoyana-alcoyana");
+    if (minutos == "0" || minutos == "10" || minutos =="20" || minutos == "30" || minutos == "40" || minutos == "50"){
+//   if (1){
       // call sensors.requestTemperatures() to issue a global temperature 
       // request to all devices on the bus
       Serial.print("Requesting temperatures...");
@@ -186,23 +197,31 @@ void loop() {
         Serial.println(tempC);
         //snprintf (msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
         //snprintf (msg, MSG_BUFFER_SIZE, "%ld", (char)tempC);
-
         mensaje =  String(tempC);
-
         mensaje.toCharArray(msg, MSG_BUFFER_SIZE);
-
-        
         //msg = (char)tempC;
         Serial.print("Publish message: ");
         Serial.println(msg);
         client.publish("CASA/JARDIN/TEMPERATURA", msg);
         //    client.publish("CASA/JARDIN/TEMPERATURA", msg);
-
       } 
       else
       {
         Serial.println("Error: Could not read temperature data");
       }
+      digitalWrite (HW080_VCC, LOW);
+      delay (500);
+      int lectura = analogRead(A0);
+      int humedad = (1024-lectura)*100/1024;
+      Serial.print ("El porcentaje de humedad es: ");
+      Serial.println (humedad);
+      mensaje =  String(humedad);
+      mensaje.toCharArray(msg, MSG_BUFFER_SIZE);      
+      Serial.print("Publish message: ");
+      Serial.println(msg);
+      client.publish("CASA/JARDIN/HUMEDAD", msg);
+        //    client.publish("CASA/JARDIN/TEMPERATURA", msg);
+      digitalWrite (HW080_VCC, HIGH);
 
     }  
   }
